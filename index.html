@@ -36,8 +36,9 @@
     .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--text-muted); }
     .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
     .header-tag { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
-    .admin-btn { font-size: 12px; padding: 6px 12px; background: none; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary); }
+    .admin-btn { font-size: 12px; padding: 6px 12px; background: none; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary); display: none; }
     .admin-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .admin-btn.visible { display: block; }
 
     /* CATEGORY NAV */
     .cat-nav { background: var(--surface); border-bottom: 1px solid var(--border); }
@@ -381,6 +382,12 @@
     ['f-title','f-cat','f-store','f-price','f-original','f-link','f-img'].forEach(id => document.getElementById(id).value = '');
     loadDeals();
   });
+
+  // /admin URL일 때만 관리자 버튼 보이기
+  const isAdminPage = window.location.pathname === '/admin' || window.location.search.includes('admin=true');
+  if (isAdminPage) {
+    document.getElementById('adminToggleBtn').classList.add('visible');
+  }
 
   // 초기화
   checkAdmin();
