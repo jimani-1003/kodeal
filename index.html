@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KoDeal — 미국 한인을 위한 할인 정보</title>
+  <meta name="description" content="미국 한인을 위한 패션·뷰티·식품 할인 정보를 매일 업데이트합니다." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #D85A30;
+      --accent-light: #FAECE7;
+      --accent-dark: #993C1D;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6b6b;
+      --text-muted: #9b9b9b;
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --border: rgba(0,0,0,0.08);
+      --border-strong: rgba(0,0,0,0.14);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .logo span { color: var(--text-primary); }
+    .search-wrap {
+      flex: 1;
+      max-width: 360px;
+      position: relative;
+    }
+    .search-wrap input {
+      width: 100%;
+      padding: 8px 14px 8px 36px;
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      font-size: 13px;
+      background: var(--bg);
+      color: var(--text-primary);
+      outline: none;
+    }
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 15px;
+      height: 15px;
+      color: var(--text-muted);
+    }
+    .header-tag {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    /* ── CATEGORY NAV ── */
+    .cat-nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .cat-nav-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .cat-nav-inner::-webkit-scrollbar { display: none; }
+    .cat-btn {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.15s, border-color 0.15s;
+      font-weight: 400;
+    }
+    .cat-btn:hover { color: var(--accent); }
+    .cat-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── MAIN ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      margin-top: 28px;
+    }
+    .section-label:first-child { margin-top: 0; }
+
+    /* ── DEAL GRID ── */
+    .deal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    /* ── DEAL CARD ── */
+    .deal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.15s;
+      display: flex;
+      flex-direction: column;
+    }
+    .deal-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+    .card-img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      background: #f0ede8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+    }
+    .card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .card-body {
+      padding: 12px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    .card-store {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .card-cat-badge {
+      font-size: 9px;
+      background: var(--accent-light);
+      color: var(--accent);
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-weight: 500;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      line-height: 1.4;
+      margin-bottom: 8px;
+      flex: 1;
+    }
+    .card-price-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .price-new {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .price-old {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+    .discount-badge {
+      margin-left: auto;
+      font-size: 10px;
+      background: var(--accent);
+      color: white;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .buy-btn {
+      display: block;
+      width: 100%;
+      padding: 9px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .buy-btn:hover { background: var(--accent-dark); }
+
+    /* ── ADD DEAL BUTTON ── */
+    .add-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-decoration: none;
+      margin-bottom: 24px;
+    }
+    .add-btn:hover { background: var(--accent-dark); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-title {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .form-group { margin-bottom: 14px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--text-primary);
+      background: var(--surface);
+      outline: none;
+      font-family: inherit;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--accent); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-cancel {
+      flex: 1;
+      padding: 10px;
+      background: none;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    .btn-submit {
+      flex: 2;
+      padding: 10px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .btn-submit:hover { background: var(--accent-dark); }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state p { margin-top: 8px; font-size: 13px; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .deal-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .header-tag { display: none; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <a href="#" class="logo">Ko<span>Deal</span></a>
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" placeholder="딜 검색..." id="searchInput" />
+    </div>
+    <span class="header-tag">미국 한인 할인 정보</span>
+  </div>
+</header>
+
+<!-- CATEGORY NAV -->
+<nav class="cat-nav">
+  <div class="cat-nav-inner">
+    <button class="cat-btn active" data-cat="전체">전체</button>
+    <button class="cat-btn" data-cat="뷰티">뷰티</button>
+    <button class="cat-btn" data-cat="패션">패션</button>
+    <button class="cat-btn" data-cat="식품">식품</button>
+    <button class="cat-btn" data-cat="홈·키친">홈·키친</button>
+    <button class="cat-btn" data-cat="전자제품">전자제품</button>
+    <button class="cat-btn" data-cat="기타">기타</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main>
+  <button class="add-btn" id="openModalBtn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+    새 딜 올리기
+  </button>
+
+  <div class="section-label" id="sectionLabel">🔥 최신 딜</div>
+  <div class="deal-grid" id="dealGrid"></div>
+</main>
+
+<!-- ADD DEAL MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">새 딜 올리기</div>
+
+    <div class="form-group">
+      <label class="form-label">제품명 *</label>
+      <input class="form-input" id="f-title" placeholder="예: ANUA 수분 세럼 55% 할인" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">카테고리 *</label>
+        <select class="form-select" id="f-cat">
+          <option value="">선택</option>
+          <option>뷰티</option>
+          <option>패션</option>
+          <option>식품</option>
+          <option>홈·키친</option>
+          <option>전자제품</option>
+          <option>기타</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">쇼핑몰 *</label>
+        <input class="form-input" id="f-store" placeholder="예: Amazon" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">할인가 (USD) *</label>
+        <input class="form-input" id="f-price" placeholder="예: 14.70" type="number" min="0" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">원가 (USD)</label>
+        <input class="form-input" id="f-original" placeholder="예: 32.00" type="number" min="0" step="0.01" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">구매 링크 *</label>
+      <input class="form-input" id="f-link" placeholder="https://..." type="url" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">이미지 URL (선택)</label>
+      <input class="form-input" id="f-img" placeholder="https://..." type="url" />
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" id="closeModalBtn">취소</button>
+      <button class="btn-submit" id="submitDeal">올리기</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  © 2025 KoDeal · 미국 한인을 위한 할인 정보
+</footer>
+
+<script>
+  const EMOJI = { '뷰티': '✨', '패션': '👗', '식품': '🥗', '홈·키친': '🏠', '전자제품': '📱', '기타': '🎁' };
+
+  let deals = [
+    { id: 1, title: 'ANUA 수분 세럼 프라임 최대 55% 할인', cat: '뷰티', store: 'Amazon', price: 14.70, original: 32.00, link: 'https://amazon.com', img: '' },
+    { id: 2, title: 'Lululemon 세일 최대 82% 할인', cat: '패션', store: 'Nordstrom', price: 29.00, original: 98.00, link: 'https://nordstrom.com', img: '' },
+    { id: 3, title: '정관장 홍삼 에브리타임 최대 53% 할인', cat: '식품', store: 'Amazon', price: 71.99, original: 149.99, link: 'https://amazon.com', img: '' },
+    { id: 4, title: 'Dyson 에어랩 i.d. 프라임데이 30% 할인', cat: '뷰티', store: 'Amazon', price: 349.00, original: 499.99, link: 'https://amazon.com', img: '' },
+    { id: 5, title: 'Jacquemus 티셔츠 50% 할인', cat: '패션', store: 'Farfetch', price: 99.00, original: 199.00, link: 'https://farfetch.com', img: '' },
+    { id: 6, title: 'Starbucks 아이스 커피 12병 세트', cat: '식품', store: 'Walmart', price: 23.45, original: 39.39, link: 'https://walmart.com', img: '' },
+  ];
+
+  let currentCat = '전체';
+  let searchQuery = '';
+
+  function discount(p, o) {
+    if (!o || o <= p) return null;
+    return Math.round((1 - p / o) * 100);
+  }
+
+  function renderDeals() {
+    const grid = document.getElementById('dealGrid');
+    const label = document.getElementById('sectionLabel');
+    let filtered = deals.filter(d => {
+      const matchCat = currentCat === '전체' || d.cat === currentCat;
+      const matchQ = !searchQuery || d.title.includes(searchQuery) || d.store.includes(searchQuery);
+      return matchCat && matchQ;
+    });
+
+    label.textContent = currentCat === '전체' ? '🔥 최신 딜' : `${EMOJI[currentCat] || ''} ${currentCat} 딜`;
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><span style="font-size:36px">🔍</span><p>아직 딜이 없어요. 첫 번째로 올려보세요!</p></div>`;
+      return;
+    }
+
+    grid.innerHTML = filtered.map(d => {
+      const disc = discount(d.price, d.original);
+      return `
+        <div class="deal-card">
+          <div class="card-img">
+            ${d.img ? `<img src="${d.img}" alt="${d.title}" onerror="this.parentElement.innerHTML='${EMOJI[d.cat] || '🎁'}'">` : EMOJI[d.cat] || '🎁'}
+          </div>
+          <div class="card-body">
+            <div class="card-meta">
+              <span class="card-store">${d.store}</span>
+              <span class="card-cat-badge">${d.cat}</span>
+            </div>
+            <div class="card-title">${d.title}</div>
+            <div class="card-price-row">
+              <span class="price-new">$${d.price.toFixed(2)}</span>
+              ${d.original ? `<span class="price-old">$${d.original.toFixed(2)}</span>` : ''}
+              ${disc ? `<span class="discount-badge">-${disc}%</span>` : ''}
+            </div>
+            <a class="buy-btn" href="${d.link}" target="_blank" rel="noopener">바로구매 →</a>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCat = btn.dataset.cat;
+      renderDeals();
+    });
+  });
+
+  document.getElementById('searchInput').addEventListener('input', e => {
+    searchQuery = e.target.value.trim();
+    renderDeals();
+  });
+
+  const modal = document.getElementById('modal');
+  document.getElementById('openModalBtn').addEventListener('click', () => modal.classList.add('open'));
+  document.getElementById('closeModalBtn').addEventListener('click', () => modal.classList.remove('open'));
+  modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+
+  document.getElementById('submitDeal').addEventListener('click', () => {
+    const title = document.getElementById('f-title').value.trim();
+    const cat = document.getElementById('f-cat').value;
+    const store = document.getElementById('f-store').value.trim();
+    const price = parseFloat(document.getElementById('f-price').value);
+    const original = parseFloat(document.getElementById('f-original').value) || null;
+    const link = document.getElementById('f-link').value.trim();
+    const img = document.getElementById('f-img').value.trim();
+
+    if (!title || !cat || !store || !price || !link) {
+      alert('필수 항목을 모두 입력해주세요 (*)');
+      return;
+    }
+
+    deals.unshift({ id: Date.now(), title, cat, store, price, original, link, img });
+    modal.classList.remove('open');
+
+    ['f-title','f-cat','f-store','f-price','f-original','f-link','f-img'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+
+    currentCat = '전체';
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.cat-btn').classList.add('active');
+    renderDeals();
+  });
+
+  renderDeals();
+</script>
+</body>
+</html>
