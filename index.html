@@ -77,6 +77,7 @@
     .buy-btn:hover { background: var(--accent-dark); }
     .delete-btn { display: none; margin-top: 6px; width: 100%; padding: 6px; background: none; border: 1px solid #eee; border-radius: var(--radius-sm); font-size: 11px; color: var(--text-muted); cursor: pointer; }
     .delete-btn:hover { border-color: #ff4444; color: #ff4444; }
+    .edit-deal-btn:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
     .admin-mode .delete-btn { display: block; }
 
     /* LOADING / EMPTY */
@@ -250,6 +251,64 @@
   </div>
 </div>
 
+<!-- 딜 수정 모달 -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">딜 수정하기</div>
+    <input type="hidden" id="edit-id" />
+    <div class="form-group">
+      <label class="form-label">제품명 *</label>
+      <input class="form-input" id="edit-title" placeholder="예: ANUA 수분 세럼 55% 할인" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">카테고리 *</label>
+        <select class="form-select" id="edit-cat">
+          <option value="">선택</option>
+          <option>뷰티</option><option>패션</option><option>마트</option>
+          <option>리빙</option><option>테크</option><option>특가</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">쇼핑몰 *</label>
+        <select class="form-select" id="edit-store-select" onchange="handleEditStoreSelect()">
+          <option value="">선택</option>
+          <option value="Amazon">Amazon</option>
+          <option value="Sephora">Sephora</option>
+          <option value="Nordstrom">Nordstrom</option>
+          <option value="Walmart">Walmart</option>
+          <option value="Target">Target</option>
+          <option value="Costco">Costco</option>
+          <option value="기타">기타 (직접 입력)</option>
+        </select>
+        <input class="form-input" id="edit-store" placeholder="쇼핑몰 이름 입력" style="display:none; margin-top:6px;" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">할인가 (USD) *</label>
+        <input class="form-input" id="edit-price" type="number" min="0" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">원가 (USD)</label>
+        <input class="form-input" id="edit-original" type="number" min="0" step="0.01" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">구매 링크 *</label>
+      <input class="form-input" id="edit-link" type="url" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">이미지 URL (선택)</label>
+      <input class="form-input" id="edit-img" type="url" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="closeEditBtn">취소</button>
+      <button class="btn-submit" id="submitEdit">수정완료</button>
+    </div>
+  </div>
+</div>
+
 <footer>© 2026 KoDeal</footer>
 
 <script>
@@ -401,6 +460,7 @@
             <button class="kakao-btn" onclick="shareKakao('${d.title}', ${d.price}, '${d.link}', '${d.img||''}')">
               💬 카카오톡 공유
             </button>
+            <button class="delete-btn edit-deal-btn" onclick="openEditModal(${d.id})">✏️ 수정</button>
             <button class="delete-btn" onclick="deleteDeal(${d.id})">🗑 삭제</button>
           </div>
         </div>`;
@@ -414,6 +474,81 @@
     loadDeals();
   }
   window.deleteDeal = deleteDeal;
+
+  // 수정 모달 열기
+  function openEditModal(id) {
+    const deal = allDeals.find(d => d.id === id);
+    if (!deal) return;
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-title').value = deal.title;
+    document.getElementById('edit-cat').value = deal.cat;
+    document.getElementById('edit-price').value = deal.price;
+    document.getElementById('edit-original').value = deal.original || '';
+    document.getElementById('edit-link').value = deal.link;
+    document.getElementById('edit-img').value = deal.img || '';
+
+    // 쇼핑몰 드롭다운 설정
+    const storeSelect = document.getElementById('edit-store-select');
+    const storeInput = document.getElementById('edit-store');
+    const knownStores = ['Amazon','Sephora','Nordstrom','Walmart','Target','Costco'];
+    if (knownStores.includes(deal.store)) {
+      storeSelect.value = deal.store;
+      storeInput.style.display = 'none';
+      storeInput.value = deal.store;
+    } else {
+      storeSelect.value = '기타';
+      storeInput.style.display = 'block';
+      storeInput.value = deal.store;
+    }
+
+    document.getElementById('editModal').classList.add('open');
+  }
+  window.openEditModal = openEditModal;
+
+  function handleEditStoreSelect() {
+    const select = document.getElementById('edit-store-select');
+    const input = document.getElementById('edit-store');
+    if (select.value === '기타') {
+      input.style.display = 'block';
+      input.value = '';
+      input.focus();
+    } else {
+      input.style.display = 'none';
+      input.value = select.value;
+    }
+  }
+  window.handleEditStoreSelect = handleEditStoreSelect;
+
+  document.getElementById('closeEditBtn').addEventListener('click', () => {
+    document.getElementById('editModal').classList.remove('open');
+  });
+
+  document.getElementById('submitEdit').addEventListener('click', async () => {
+    const id = document.getElementById('edit-id').value;
+    const title = document.getElementById('edit-title').value.trim();
+    const cat = document.getElementById('edit-cat').value;
+    const storeSelect = document.getElementById('edit-store-select').value;
+    const store = storeSelect === '기타' ? document.getElementById('edit-store').value.trim() : storeSelect;
+    const price = parseFloat(document.getElementById('edit-price').value);
+    const original = parseFloat(document.getElementById('edit-original').value) || null;
+    const link = document.getElementById('edit-link').value.trim();
+    const img = document.getElementById('edit-img').value.trim() || null;
+
+    if (!title || !cat || !store || !price || !link) { alert('필수 항목을 모두 입력해주세요!'); return; }
+
+    const btn = document.getElementById('submitEdit');
+    btn.disabled = true;
+    btn.textContent = '수정 중...';
+
+    const { error } = await sb.from('deals').update({ title, cat, store, price, original, link, img }).eq('id', id);
+
+    btn.disabled = false;
+    btn.textContent = '수정완료';
+
+    if (error) { alert('오류가 났어요. 다시 시도해주세요.'); return; }
+    document.getElementById('editModal').classList.remove('open');
+    loadDeals();
+  });
 
   // 카테고리
   document.querySelectorAll('.cat-btn').forEach(btn => {
