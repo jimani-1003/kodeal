@@ -53,9 +53,9 @@
     .section-label { font-size: 11px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 14px; }
 
     /* ADD BUTTON (admin only) */
-    .add-btn { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; align-items: center; gap: 8px; padding: 10px 18px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-size: 13px; font-weight: 500; cursor: pointer; margin-bottom: 24px; }
+    .add-btn { display: none; align-items: center; gap: 8px; padding: 10px 18px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-size: 13px; font-weight: 500; cursor: pointer; margin-bottom: 24px; }
     .add-btn:hover { background: var(--accent-dark); }
-    .add-btn.visible { display: flex !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; }
+    .add-btn.visible { display: flex; }
 
     /* DEAL GRID */
     .deal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
@@ -152,7 +152,7 @@
 </nav>
 
 <main>
-  <button class="add-btn" id="openModalBtn" style="display:none !important;">
+  <button class="add-btn" id="openModalBtn">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
     새 딜 올리기
   </button>
@@ -281,11 +281,10 @@
     const adminBtn = document.getElementById('adminToggleBtn');
     const grid = document.getElementById('dealGrid');
     if (isAdmin) {
-      addBtn.classList.add('visible');
+      addBtn.style.display = 'flex';
       adminBtn.textContent = '로그아웃';
       grid.classList.add('admin-mode');
     } else {
-      addBtn.classList.remove('visible');
       addBtn.style.display = 'none';
       adminBtn.textContent = '관리자';
       grid.classList.remove('admin-mode');
