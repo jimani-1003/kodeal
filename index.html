@@ -53,9 +53,9 @@
     .section-label { font-size: 11px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 14px; }
 
     /* ADD BUTTON (admin only) */
-    .add-btn { display: none; align-items: center; gap: 8px; padding: 10px 18px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-size: 13px; font-weight: 500; cursor: pointer; margin-bottom: 24px; }
+    .add-btn { display: none !important; align-items: center; gap: 8px; padding: 10px 18px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-size: 13px; font-weight: 500; cursor: pointer; margin-bottom: 24px; }
     .add-btn:hover { background: var(--accent-dark); }
-    .add-btn.visible { display: flex; }
+    .add-btn.visible { display: flex !important; }
 
     /* DEAL GRID */
     .deal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
@@ -286,6 +286,7 @@
       grid.classList.add('admin-mode');
     } else {
       addBtn.classList.remove('visible');
+      addBtn.style.display = 'none';
       adminBtn.textContent = '관리자';
       grid.classList.remove('admin-mode');
     }
