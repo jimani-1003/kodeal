@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KoDeal — 미국 한인을 위한 할인 정보</title>
+  <meta name="description" content="미국 한인을 위한 패션·뷰티·식품 할인 정보를 매일 업데이트합니다." />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.6.0/kakao.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --accent: #D85A30;
+      --accent-light: #FAECE7;
+      --accent-dark: #993C1D;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6b6b;
+      --text-muted: #9b9b9b;
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --border: rgba(0,0,0,0.08);
+      --border-strong: rgba(0,0,0,0.14);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text-primary); font-size: 14px; line-height: 1.5; min-height: 100vh; }
+
+    /* HEADER */
+    header { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .header-inner { max-width: 1100px; margin: 0 auto; padding: 0 20px; height: 56px; display: flex; align-items: center; gap: 20px; }
+    .logo { font-size: 22px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; text-decoration: none; flex-shrink: 0; }
+    .logo span { color: var(--text-primary); }
+    .search-wrap { flex: 1; max-width: 360px; position: relative; }
+    .search-wrap input { width: 100%; padding: 8px 14px 8px 36px; border: 1px solid var(--border-strong); border-radius: 20px; font-size: 13px; background: var(--bg); color: var(--text-primary); outline: none; }
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--text-muted); }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .header-tag { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+    .admin-btn { font-size: 12px; padding: 6px 12px; background: none; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-secondary); display: none; }
+    .admin-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .admin-btn.visible { display: block; }
+
+    /* CATEGORY NAV */
+    .cat-nav { background: var(--surface); border-bottom: 1px solid var(--border); }
+    .cat-nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 20px; display: flex; overflow-x: auto; scrollbar-width: none; }
+    .cat-nav-inner::-webkit-scrollbar { display: none; }
+    .cat-btn { padding: 12px 16px; font-size: 13px; color: var(--text-secondary); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; transition: color 0.15s, border-color 0.15s; }
+    .cat-btn:hover { color: var(--accent); }
+    .cat-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+    /* MAIN */
+    main { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+    .section-label { font-size: 11px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 14px; }
+
+    /* ADD BUTTON (admin only) */
+    .add-btn { display: none; align-items: center; gap: 8px; padding: 10px 18px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-size: 13px; font-weight: 500; cursor: pointer; margin-bottom: 24px; }
+    .add-btn:hover { background: var(--accent-dark); }
+    .add-btn.visible { display: flex; }
+
+    /* DEAL GRID */
+    .deal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .deal-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; transition: transform 0.15s, box-shadow 0.15s; display: flex; flex-direction: column; }
+    .deal-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+    .card-img { width: 100%; aspect-ratio: 1/1; background: #f0ede8; display: flex; align-items: center; justify-content: center; font-size: 48px; overflow: hidden; }
+    .card-img img { width: 100%; height: 100%; object-fit: cover; }
+    .card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; flex: 1; }
+    .card-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+    .card-store { font-size: 10px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; }
+    .card-cat-badge { font-size: 9px; background: var(--accent-light); color: var(--accent); padding: 2px 7px; border-radius: 10px; font-weight: 500; }
+    .card-title { font-size: 13px; font-weight: 500; color: var(--text-primary); line-height: 1.4; margin-bottom: 8px; flex: 1; }
+    .card-price-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+    .price-new { font-size: 16px; font-weight: 700; color: var(--accent); }
+    .price-old { font-size: 12px; color: var(--text-muted); text-decoration: line-through; }
+    .discount-badge { margin-left: auto; font-size: 10px; background: var(--accent); color: white; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+    .buy-btn { display: block; width: 100%; padding: 9px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.15s; }
+    .buy-btn:hover { background: var(--accent-dark); }
+    .delete-btn { display: none; margin-top: 6px; width: 100%; padding: 6px; background: none; border: 1px solid #eee; border-radius: var(--radius-sm); font-size: 11px; color: var(--text-muted); cursor: pointer; }
+    .delete-btn:hover { border-color: #ff4444; color: #ff4444; }
+    .edit-deal-btn:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
+    .admin-mode .delete-btn { display: block; }
+
+    /* LOADING / EMPTY */
+    .loading { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 13px; grid-column: 1/-1; }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); grid-column: 1/-1; }
+    .empty-state p { margin-top: 8px; font-size: 13px; }
+
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-size: 17px; font-weight: 600; margin-bottom: 20px; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 5px; }
+    .form-input, .form-select { width: 100%; padding: 9px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 13px; color: var(--text-primary); background: var(--surface); outline: none; font-family: inherit; }
+    .form-input:focus, .form-select:focus { border-color: var(--accent); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-cancel { flex: 1; padding: 10px; background: none; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 13px; cursor: pointer; color: var(--text-secondary); }
+    .btn-submit { flex: 2; padding: 10px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; }
+    .btn-submit:hover { background: var(--accent-dark); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* LOGIN MODAL */
+    .login-modal { background: var(--surface); border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 360px; }
+    .login-title { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+    .login-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
+    .login-error { font-size: 12px; color: #ff4444; margin-top: 8px; display: none; }
+
+    /* SORT & LIKES */
+    .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .sort-wrap { display: flex; gap: 6px; }
+    .sort-btn { padding: 5px 12px; font-size: 12px; border: 1px solid var(--border-strong); border-radius: 20px; background: none; cursor: pointer; color: var(--text-secondary); }
+    .sort-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .card-date { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+    .kakao-btn { display: flex; align-items: center; gap: 4px; margin-top: 6px; width: 100%; padding: 7px; background: #FEE500; border: none; border-radius: var(--radius-sm); font-size: 12px; color: #3C1E1E; cursor: pointer; justify-content: center; font-weight: 500; }
+    .kakao-btn:hover { background: #F0D800; }
+    .like-btn { display: flex; align-items: center; gap: 4px; margin-top: 6px; width: 100%; padding: 7px; background: none; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 12px; color: var(--text-secondary); cursor: pointer; justify-content: center; transition: all 0.15s; }
+    .like-btn:hover { border-color: #ff6b6b; color: #ff6b6b; }
+    .like-btn.liked { background: #fff0f0; border-color: #ff6b6b; color: #ff6b6b; }
+    footer { border-top: 1px solid var(--border); background: var(--surface); padding: 20px; text-align: center; font-size: 12px; color: var(--text-muted); }
+
+    @media (max-width: 600px) {
+      .deal-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .header-tag { display: none; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="#" class="logo">Ko<span>Deal</span></a>
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="딜 검색..." id="searchInput" />
+    </div>
+    <div class="header-right">
+      
+      <button class="admin-btn" id="adminToggleBtn">관리자</button>
+    </div>
+  </div>
+</header>
+
+<nav class="cat-nav">
+  <div class="cat-nav-inner">
+    <button class="cat-btn active" data-cat="전체">전체</button>
+    <button class="cat-btn" data-cat="뷰티">✨ 뷰티</button>
+    <button class="cat-btn" data-cat="패션">👗 패션</button>
+    <button class="cat-btn" data-cat="마트">🛒 마트</button>
+    <button class="cat-btn" data-cat="리빙">🏡 리빙</button>
+    <button class="cat-btn" data-cat="테크">💻 테크</button>
+    <button class="cat-btn" data-cat="특가">🎁 특가</button>
+  </div>
+</nav>
+
+<main>
+  <button class="add-btn" id="openModalBtn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+    새 딜 올리기
+  </button>
+  <div class="toolbar">
+    <div class="section-label" id="sectionLabel" style="margin-bottom:0;">🔥 최신 딜</div>
+    <div class="sort-wrap">
+      <button class="sort-btn active" data-sort="latest">최신순</button>
+      <button class="sort-btn" data-sort="discount">할인율순</button>
+      <button class="sort-btn" data-sort="price">낮은가격순</button>
+    </div>
+  </div>
+  <div class="deal-grid" id="dealGrid">
+    <div class="loading">딜 불러오는 중...</div>
+  </div>
+</main>
+
+<!-- 딜 추가 모달 -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">새 딜 올리기</div>
+    <div class="form-group">
+      <label class="form-label">제품명 *</label>
+      <input class="form-input" id="f-title" placeholder="예: ANUA 수분 세럼 55% 할인" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">카테고리 *</label>
+        <select class="form-select" id="f-cat">
+          <option value="">선택</option>
+          <option>뷰티</option><option>패션</option><option>마트</option>
+          <option>리빙</option><option>테크</option><option>특가</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">쇼핑몰 *</label>
+        <select class="form-select" id="f-store-select" onchange="handleStoreSelect()">
+          <option value="">선택</option>
+          <option value="Amazon">Amazon</option>
+          <option value="Sephora">Sephora</option>
+          <option value="Nordstrom">Nordstrom</option>
+          <option value="Walmart">Walmart</option>
+          <option value="Target">Target</option>
+          <option value="Costco">Costco</option>
+          <option value="기타">기타 (직접 입력)</option>
+        </select>
+        <input class="form-input" id="f-store" placeholder="쇼핑몰 이름 입력" style="display:none; margin-top:6px;" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">할인가 (USD) *</label>
+        <input class="form-input" id="f-price" placeholder="예: 14.70" type="number" min="0" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">원가 (USD)</label>
+        <input class="form-input" id="f-original" placeholder="예: 32.00" type="number" min="0" step="0.01" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">구매 링크 *</label>
+      <input class="form-input" id="f-link" placeholder="https://..." type="url" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">이미지 URL (선택)</label>
+      <input class="form-input" id="f-img" placeholder="https://..." type="url" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="closeModalBtn">취소</button>
+      <button class="btn-submit" id="submitDeal">올리기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 로그인 모달 -->
+<div class="modal-overlay" id="loginModal">
+  <div class="login-modal">
+    <div class="login-title">관리자 로그인</div>
+    <div class="login-sub">KoDeal 관리자만 접근할 수 있어요</div>
+    <div class="form-group">
+      <label class="form-label">이메일</label>
+      <input class="form-input" id="login-email" type="email" placeholder="이메일 입력" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">비밀번호</label>
+      <input class="form-input" id="login-pw" type="password" placeholder="비밀번호 입력" />
+    </div>
+    <div class="login-error" id="loginError">이메일 또는 비밀번호가 틀렸어요</div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="closeLoginBtn">취소</button>
+      <button class="btn-submit" id="loginBtn">로그인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 딜 수정 모달 -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">딜 수정하기</div>
+    <input type="hidden" id="edit-id" />
+    <div class="form-group">
+      <label class="form-label">제품명 *</label>
+      <input class="form-input" id="edit-title" placeholder="예: ANUA 수분 세럼 55% 할인" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">카테고리 *</label>
+        <select class="form-select" id="edit-cat">
+          <option value="">선택</option>
+          <option>뷰티</option><option>패션</option><option>마트</option>
+          <option>리빙</option><option>테크</option><option>특가</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">쇼핑몰 *</label>
+        <select class="form-select" id="edit-store-select" onchange="handleEditStoreSelect()">
+          <option value="">선택</option>
+          <option value="Amazon">Amazon</option>
+          <option value="Sephora">Sephora</option>
+          <option value="Nordstrom">Nordstrom</option>
+          <option value="Walmart">Walmart</option>
+          <option value="Target">Target</option>
+          <option value="Costco">Costco</option>
+          <option value="기타">기타 (직접 입력)</option>
+        </select>
+        <input class="form-input" id="edit-store" placeholder="쇼핑몰 이름 입력" style="display:none; margin-top:6px;" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">할인가 (USD) *</label>
+        <input class="form-input" id="edit-price" type="number" min="0" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">원가 (USD)</label>
+        <input class="form-input" id="edit-original" type="number" min="0" step="0.01" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">구매 링크 *</label>
+      <input class="form-input" id="edit-link" type="url" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">이미지 URL (선택)</label>
+      <input class="form-input" id="edit-img" type="url" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="closeEditBtn">취소</button>
+      <button class="btn-submit" id="submitEdit">수정완료</button>
+    </div>
+  </div>
+</div>
+
+<footer>© 2026 KoDeal</footer>
+
+<script>
+  // 카카오 초기화
+  Kakao.init('62db2a1c5e2365eac66caeb3868c752b');
+
+  function shareKakao(title, price, link, img) {
+    Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: '[KoDeal] ' + title,
+        description: '💰 지금 $' + Number(price).toFixed(2) + ' · 미국 한인 할인 정보',
+        imageUrl: img || 'https://kodeal.vercel.app/og.png',
+        link: { mobileWebUrl: link, webUrl: link }
+      },
+      buttons: [{
+        title: '바로구매 →',
+        link: { mobileWebUrl: link, webUrl: link }
+      }, {
+        title: 'KoDeal 더보기',
+        link: { mobileWebUrl: 'https://kodeal.vercel.app', webUrl: 'https://kodeal.vercel.app' }
+      }]
+    });
+  }
+  window.shareKakao = shareKakao;
+
+  const SUPABASE_URL = 'https://gokhzklkrosxyhmwnctp.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdva2h6a2xrcm9zeHlobXduY3RwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNzk0OTMsImV4cCI6MjA5Nzk1NTQ5M30.cFSXqSc4UDHTTsf3GRWTA110NT5HY99WEkLB4ueHU14';
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const EMOJI = { '뷰티':'✨','패션':'👗','마트':'🛒','리빙':'🏡','테크':'💻','특가':'🎁' };
+  let currentSort = 'latest';
+  let likes = JSON.parse(localStorage.getItem('kodeal_likes') || '{}');
+
+  function saveLikes() { localStorage.setItem('kodeal_likes', JSON.stringify(likes)); }
+
+  function timeAgo(dateStr) {
+    const diff = (Date.now() - new Date(dateStr)) / 1000;
+    if (diff < 3600) return Math.floor(diff/60) + '분 전';
+    if (diff < 86400) return Math.floor(diff/3600) + '시간 전';
+    return Math.floor(diff/86400) + '일 전';
+  }
+
+  function toggleLike(id) {
+    likes[id] = !likes[id];
+    saveLikes();
+    renderDeals();
+  }
+  window.toggleLike = toggleLike;
+
+  function handleStoreSelect() {
+    const select = document.getElementById('f-store-select');
+    const input = document.getElementById('f-store');
+    if (select.value === '기타') {
+      input.style.display = 'block';
+      input.value = '';
+      input.focus();
+    } else {
+      input.style.display = 'none';
+      input.value = select.value;
+    }
+  }
+  window.handleStoreSelect = handleStoreSelect;
+  let currentCat = '전체';
+  let searchQuery = '';
+  let isAdmin = false;
+  let allDeals = [];
+
+  // 관리자 상태 체크
+  async function checkAdmin() {
+    const { data: { session } } = await sb.auth.getSession();
+    isAdmin = !!session;
+    updateAdminUI();
+  }
+  
+
+  function updateAdminUI() {
+    const addBtn = document.getElementById('openModalBtn');
+    const adminBtn = document.getElementById('adminToggleBtn');
+    const grid = document.getElementById('dealGrid');
+    const isAdminPage = window.location.pathname === '/admin' || window.location.search.includes('admin=true');
+    if (isAdmin && isAdminPage) {
+      addBtn.style.display = 'flex';
+      adminBtn.textContent = '로그아웃';
+      grid.classList.add('admin-mode');
+    } else {
+      addBtn.style.display = 'none';
+      if (!isAdminPage) adminBtn.classList.remove('visible');
+      adminBtn.textContent = '관리자';
+      grid.classList.remove('admin-mode');
+    }
+  }
+
+  // 딜 불러오기
+  async function loadDeals() {
+    const grid = document.getElementById('dealGrid');
+    grid.innerHTML = '<div class="loading">딜 불러오는 중...</div>';
+    const { data, error } = await sb.from('deals').select('*').order('created_at', { ascending: false });
+    if (error) { grid.innerHTML = '<div class="loading">불러오기 실패. 새로고침 해주세요.</div>'; return; }
+    allDeals = data || [];
+    renderDeals();
+  }
+
+  function renderDeals() {
+    const grid = document.getElementById('dealGrid');
+    const label = document.getElementById('sectionLabel');
+    let filtered = allDeals.filter(d => {
+      const matchCat = currentCat === '전체' || d.cat === currentCat;
+      const matchQ = !searchQuery || d.title.includes(searchQuery) || d.store.includes(searchQuery);
+      return matchCat && matchQ;
+    });
+    // 정렬
+    if (currentSort === 'discount') {
+      filtered.sort((a, b) => {
+        const da = a.original ? (1 - a.price/a.original) : 0;
+        const db = b.original ? (1 - b.price/b.original) : 0;
+        return db - da;
+      });
+    } else if (currentSort === 'price') {
+      filtered.sort((a, b) => a.price - b.price);
+    }
+    label.textContent = currentCat === '전체' ? '🔥 최신 딜' : `${EMOJI[currentCat]||''} ${currentCat} 딜`;
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div class="empty-state"><span style="font-size:36px">🔍</span><p>아직 딜이 없어요!</p></div>`;
+      return;
+    }
+    grid.innerHTML = filtered.map(d => {
+      const disc = d.original && d.original > d.price ? Math.round((1 - d.price / d.original) * 100) : null;
+      return `
+        <div class="deal-card">
+          <div class="card-img">${d.img ? `<img src="${d.img}" alt="${d.title}" onerror="this.parentElement.innerHTML='${EMOJI[d.cat]||'🎁'}'">` : EMOJI[d.cat]||'🎁'}</div>
+          <div class="card-body">
+            <div class="card-meta">
+              <span class="card-store">${d.store}</span>
+              <span class="card-cat-badge">${d.cat}</span>
+            </div>
+            <div class="card-title">${d.title}</div>
+            <div class="card-price-row">
+              <span class="price-new">$${Number(d.price).toFixed(2)}</span>
+              ${d.original ? `<span class="price-old">$${Number(d.original).toFixed(2)}</span>` : ''}
+              ${disc ? `<span class="discount-badge">-${disc}%</span>` : ''}
+            </div>
+            <div class="card-date">${timeAgo(d.created_at)}</div>
+            <a class="buy-btn" href="${d.link}" target="_blank" rel="noopener">바로구매 →</a>
+            <button class="like-btn ${likes[d.id] ? 'liked' : ''}" onclick="toggleLike(${d.id})">
+              ${likes[d.id] ? '❤️' : '🤍'} 저도 샀어요 ${likes[d.id] ? '· 취소' : ''}
+            </button>
+            <button class="kakao-btn" onclick="shareKakao('${d.title}', ${d.price}, '${d.link}', '${d.img||''}')">
+              💬 카카오톡 공유
+            </button>
+            <button class="delete-btn edit-deal-btn" onclick="openEditModal(${d.id})">✏️ 수정</button>
+            <button class="delete-btn" onclick="deleteDeal(${d.id})">🗑 삭제</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // 딜 삭제
+  async function deleteDeal(id) {
+    if (!confirm('이 딜을 삭제할까요?')) return;
+    await sb.from('deals').delete().eq('id', id);
+    loadDeals();
+  }
+  window.deleteDeal = deleteDeal;
+
+  // 수정 모달 열기
+  function openEditModal(id) {
+    const deal = allDeals.find(d => d.id === id);
+    if (!deal) return;
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-title').value = deal.title;
+    document.getElementById('edit-cat').value = deal.cat;
+    document.getElementById('edit-price').value = deal.price;
+    document.getElementById('edit-original').value = deal.original || '';
+    document.getElementById('edit-link').value = deal.link;
+    document.getElementById('edit-img').value = deal.img || '';
+
+    // 쇼핑몰 드롭다운 설정
+    const storeSelect = document.getElementById('edit-store-select');
+    const storeInput = document.getElementById('edit-store');
+    const knownStores = ['Amazon','Sephora','Nordstrom','Walmart','Target','Costco'];
+    if (knownStores.includes(deal.store)) {
+      storeSelect.value = deal.store;
+      storeInput.style.display = 'none';
+      storeInput.value = deal.store;
+    } else {
+      storeSelect.value = '기타';
+      storeInput.style.display = 'block';
+      storeInput.value = deal.store;
+    }
+
+    document.getElementById('editModal').classList.add('open');
+  }
+  window.openEditModal = openEditModal;
+
+  function handleEditStoreSelect() {
+    const select = document.getElementById('edit-store-select');
+    const input = document.getElementById('edit-store');
+    if (select.value === '기타') {
+      input.style.display = 'block';
+      input.value = '';
+      input.focus();
+    } else {
+      input.style.display = 'none';
+      input.value = select.value;
+    }
+  }
+  window.handleEditStoreSelect = handleEditStoreSelect;
+
+  document.getElementById('closeEditBtn').addEventListener('click', () => {
+    document.getElementById('editModal').classList.remove('open');
+  });
+
+  document.getElementById('submitEdit').addEventListener('click', async () => {
+    const id = document.getElementById('edit-id').value;
+    const title = document.getElementById('edit-title').value.trim();
+    const cat = document.getElementById('edit-cat').value;
+    const storeSelect = document.getElementById('edit-store-select').value;
+    const store = storeSelect === '기타' ? document.getElementById('edit-store').value.trim() : storeSelect;
+    const price = parseFloat(document.getElementById('edit-price').value);
+    const original = parseFloat(document.getElementById('edit-original').value) || null;
+    const link = document.getElementById('edit-link').value.trim();
+    const img = document.getElementById('edit-img').value.trim() || null;
+
+    if (!title || !cat || !store || !price || !link) { alert('필수 항목을 모두 입력해주세요!'); return; }
+
+    const btn = document.getElementById('submitEdit');
+    btn.disabled = true;
+    btn.textContent = '수정 중...';
+
+    const { error } = await sb.from('deals').update({ title, cat, store, price, original, link, img }).eq('id', id);
+
+    btn.disabled = false;
+    btn.textContent = '수정완료';
+
+    if (error) { alert('오류가 났어요. 다시 시도해주세요.'); return; }
+    document.getElementById('editModal').classList.remove('open');
+    loadDeals();
+  });
+
+  // 카테고리
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCat = btn.dataset.cat;
+      renderDeals();
+    });
+  });
+
+  // 검색
+  document.getElementById('searchInput').addEventListener('input', e => {
+    searchQuery = e.target.value.trim();
+    renderDeals();
+  });
+
+  // 관리자 버튼
+  document.getElementById('adminToggleBtn').addEventListener('click', async () => {
+    if (isAdmin) {
+      await sb.auth.signOut();
+      isAdmin = false;
+      updateAdminUI();
+    } else {
+      document.getElementById('loginModal').classList.add('open');
+    }
+  });
+
+  // 로그인
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const email = document.getElementById('login-email').value.trim();
+    const pw = document.getElementById('login-pw').value;
+    const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if (error) {
+      document.getElementById('loginError').style.display = 'block';
+    } else {
+      document.getElementById('loginModal').classList.remove('open');
+      document.getElementById('loginError').style.display = 'none';
+      isAdmin = true;
+      updateAdminUI();
+    }
+  });
+  document.getElementById('closeLoginBtn').addEventListener('click', () => {
+    document.getElementById('loginModal').classList.remove('open');
+  });
+
+  // 딜 추가 모달
+  const modal = document.getElementById('modal');
+  document.getElementById('openModalBtn').addEventListener('click', () => modal.classList.add('open'));
+  document.getElementById('closeModalBtn').addEventListener('click', () => modal.classList.remove('open'));
+  modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('open'); });
+
+  document.getElementById('submitDeal').addEventListener('click', async () => {
+    const title = document.getElementById('f-title').value.trim();
+    const cat = document.getElementById('f-cat').value;
+    const store = document.getElementById('f-store').value.trim();
+    const price = parseFloat(document.getElementById('f-price').value);
+    const original = parseFloat(document.getElementById('f-original').value) || null;
+    const link = document.getElementById('f-link').value.trim();
+    const img = document.getElementById('f-img').value.trim() || null;
+    if (!title || !cat || !store || !price || !link) { alert('필수 항목을 모두 입력해주세요 (*)'); return; }
+    const btn = document.getElementById('submitDeal');
+    btn.disabled = true;
+    btn.textContent = '올리는 중...';
+    const { error } = await sb.from('deals').insert([{ title, cat, store, price, original, link, img }]);
+    btn.disabled = false;
+    btn.textContent = '올리기';
+    if (error) { alert('오류가 났어요. 다시 시도해주세요.'); return; }
+    modal.classList.remove('open');
+    ['f-title','f-cat','f-store','f-price','f-original','f-link','f-img'].forEach(id => document.getElementById(id).value = '');
+    loadDeals();
+  });
+
+  // 정렬 버튼
+  document.querySelectorAll('.sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentSort = btn.dataset.sort;
+      renderDeals();
+    });
+  });
+
+  // 초기화 (순서 중요: 관리자 확인 먼저, 그 다음 딜 로드)
+  async function init() {
+    const isAdminPage = window.location.pathname === '/admin' || window.location.search.includes('admin=true');
+    
+    // 관리자 세션 확인
+    const { data: { session } } = await sb.auth.getSession();
+    isAdmin = !!session;
+    
+    // 관리자 페이지 + 로그인된 경우만 버튼 보이기
+    if (isAdminPage) {
+      document.getElementById('adminToggleBtn').classList.add('visible');
+      if (!isAdmin) {
+        document.getElementById('loginModal').classList.add('open');
+      }
+    }
+    
+    updateAdminUI();
+    loadDeals();
+  }
+  
+  init();
+</script>
+</body>
+</html>
