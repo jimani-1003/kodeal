@@ -405,7 +405,7 @@
     preview.style.display = 'block';
     text.textContent = file.name;
     // 임시 저장
-    document.getElementById('f-img-file')._file = file;
+    _newDealImgFile = file;
   }
   window.handleImgFile = handleImgFile;
 
@@ -417,7 +417,7 @@
     preview.src = URL.createObjectURL(file);
     preview.style.display = 'block';
     text.textContent = file.name;
-    document.getElementById('edit-img-file')._file = file;
+    _editDealImgFile = file;
   }
   window.handleEditImgFile = handleEditImgFile;
 
@@ -439,9 +439,12 @@
       document.getElementById(previewId).src = URL.createObjectURL(file);
       document.getElementById(previewId).style.display = 'block';
       document.getElementById(textId).textContent = file.name;
-      document.getElementById(inputId)._file = file;
+      if (isEdit) { _editDealImgFile = file; } else { _newDealImgFile = file; }
     });
   });
+
+  let _newDealImgFile = null;
+  let _editDealImgFile = null;
 
   const SUPABASE_URL = 'https://gokhzklkrosxyhmwnctp.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdva2h6a2xrcm9zeHlobXduY3RwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNzk0OTMsImV4cCI6MjA5Nzk1NTQ5M30.cFSXqSc4UDHTTsf3GRWTA110NT5HY99WEkLB4ueHU14';
@@ -625,6 +628,11 @@
       storeInput.value = deal.store;
     }
 
+    // 이미지 초기화
+    _editDealImgFile = null;
+    document.getElementById('editImgPreview').style.display = 'none';
+    document.getElementById('editImgDropText').textContent = '🖼️ 클릭하거나 이미지를 여기에 드래그';
+
     document.getElementById('editModal').classList.add('open');
   }
   window.openEditModal = openEditModal;
@@ -664,7 +672,7 @@
     btn.disabled = true;
     btn.textContent = '수정 중...';
 
-    const editImgFile = document.getElementById('edit-img-file')._file;
+    const editImgFile = _editDealImgFile;
     if (editImgFile) { img = await uploadImage(editImgFile, 'deal'); }
     const { error } = await sb.from('deals').update({ title, cat, store, price, original, link, img }).eq('id', id);
 
@@ -735,7 +743,7 @@
     const original = parseFloat(document.getElementById('f-original').value) || null;
     const link = document.getElementById('f-link').value.trim();
     let img = null;
-    const imgFile = document.getElementById('f-img-file')._file;
+    const imgFile = _newDealImgFile;
     if (!title || !cat || !store || !price || !link) { alert('필수 항목을 모두 입력해주세요 (*)'); return; }
     const btn = document.getElementById('submitDeal');
     btn.disabled = true;
@@ -749,7 +757,7 @@
     ['f-title','f-cat','f-store-select','f-price','f-original','f-link','f-img'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = ''; });
     document.getElementById('imgPreview').style.display = 'none';
     document.getElementById('imgDropText').textContent = '🖼️ 클릭하거나 이미지를 여기에 드래그';
-    document.getElementById('f-img-file')._file = null;
+    _newDealImgFile = null;
     loadDeals();
   });
 
