@@ -105,6 +105,15 @@
     .login-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
     .login-error { font-size: 12px; color: #ff4444; margin-top: 8px; display: none; }
 
+    /* SORT & LIKES */
+    .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .sort-wrap { display: flex; gap: 6px; }
+    .sort-btn { padding: 5px 12px; font-size: 12px; border: 1px solid var(--border-strong); border-radius: 20px; background: none; cursor: pointer; color: var(--text-secondary); }
+    .sort-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .card-date { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+    .like-btn { display: flex; align-items: center; gap: 4px; margin-top: 6px; width: 100%; padding: 7px; background: none; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 12px; color: var(--text-secondary); cursor: pointer; justify-content: center; transition: all 0.15s; }
+    .like-btn:hover { border-color: #ff6b6b; color: #ff6b6b; }
+    .like-btn.liked { background: #fff0f0; border-color: #ff6b6b; color: #ff6b6b; }
     footer { border-top: 1px solid var(--border); background: var(--surface); padding: 20px; text-align: center; font-size: 12px; color: var(--text-muted); }
 
     @media (max-width: 600px) {
@@ -147,7 +156,14 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
     새 딜 올리기
   </button>
-  <div class="section-label" id="sectionLabel">🔥 최신 딜</div>
+  <div class="toolbar">
+    <div class="section-label" id="sectionLabel" style="margin-bottom:0;">🔥 최신 딜</div>
+    <div class="sort-wrap">
+      <button class="sort-btn active" data-sort="latest">최신순</button>
+      <button class="sort-btn" data-sort="discount">할인율순</button>
+      <button class="sort-btn" data-sort="price">낮은가격순</button>
+    </div>
+  </div>
   <div class="deal-grid" id="dealGrid">
     <div class="loading">딜 불러오는 중...</div>
   </div>
@@ -230,6 +246,24 @@
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const EMOJI = { '뷰티':'✨','패션':'👗','식품':'🥗','홈·키친':'🏠','전자제품':'📱','기타':'🎁' };
+  let currentSort = 'latest';
+  let likes = JSON.parse(localStorage.getItem('kodeal_likes') || '{}');
+
+  function saveLikes() { localStorage.setItem('kodeal_likes', JSON.stringify(likes)); }
+
+  function timeAgo(dateStr) {
+    const diff = (Date.now() - new Date(dateStr)) / 1000;
+    if (diff < 3600) return Math.floor(diff/60) + '분 전';
+    if (diff < 86400) return Math.floor(diff/3600) + '시간 전';
+    return Math.floor(diff/86400) + '일 전';
+  }
+
+  function toggleLike(id) {
+    likes[id] = !likes[id];
+    saveLikes();
+    renderDeals();
+  }
+  window.toggleLike = toggleLike;
   let currentCat = '전체';
   let searchQuery = '';
   let isAdmin = false;
@@ -275,6 +309,16 @@
       const matchQ = !searchQuery || d.title.includes(searchQuery) || d.store.includes(searchQuery);
       return matchCat && matchQ;
     });
+    // 정렬
+    if (currentSort === 'discount') {
+      filtered.sort((a, b) => {
+        const da = a.original ? (1 - a.price/a.original) : 0;
+        const db = b.original ? (1 - b.price/b.original) : 0;
+        return db - da;
+      });
+    } else if (currentSort === 'price') {
+      filtered.sort((a, b) => a.price - b.price);
+    }
     label.textContent = currentCat === '전체' ? '🔥 최신 딜' : `${EMOJI[currentCat]||''} ${currentCat} 딜`;
     if (filtered.length === 0) {
       grid.innerHTML = `<div class="empty-state"><span style="font-size:36px">🔍</span><p>아직 딜이 없어요!</p></div>`;
@@ -296,7 +340,11 @@
               ${d.original ? `<span class="price-old">$${Number(d.original).toFixed(2)}</span>` : ''}
               ${disc ? `<span class="discount-badge">-${disc}%</span>` : ''}
             </div>
+            <div class="card-date">${timeAgo(d.created_at)}</div>
             <a class="buy-btn" href="${d.link}" target="_blank" rel="noopener">바로구매 →</a>
+            <button class="like-btn ${likes[d.id] ? 'liked' : ''}" onclick="toggleLike(${d.id})">
+              ${likes[d.id] ? '❤️' : '🤍'} 저도 샀어요 ${likes[d.id] ? '· 취소' : ''}
+            </button>
             <button class="delete-btn" onclick="deleteDeal(${d.id})">🗑 삭제</button>
           </div>
         </div>`;
@@ -381,6 +429,16 @@
     modal.classList.remove('open');
     ['f-title','f-cat','f-store','f-price','f-original','f-link','f-img'].forEach(id => document.getElementById(id).value = '');
     loadDeals();
+  });
+
+  // 정렬 버튼
+  document.querySelectorAll('.sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentSort = btn.dataset.sort;
+      renderDeals();
+    });
   });
 
   // /admin URL일 때만 관리자 버튼 보이기
