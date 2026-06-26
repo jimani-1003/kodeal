@@ -191,7 +191,17 @@
       </div>
       <div class="form-group">
         <label class="form-label">쇼핑몰 *</label>
-        <input class="form-input" id="f-store" placeholder="예: Amazon" />
+        <select class="form-select" id="f-store-select" onchange="handleStoreSelect()">
+          <option value="">선택</option>
+          <option value="Amazon">Amazon</option>
+          <option value="Sephora">Sephora</option>
+          <option value="Nordstrom">Nordstrom</option>
+          <option value="Walmart">Walmart</option>
+          <option value="Target">Target</option>
+          <option value="Costco">Costco</option>
+          <option value="기타">기타 (직접 입력)</option>
+        </select>
+        <input class="form-input" id="f-store" placeholder="쇼핑몰 이름 입력" style="display:none; margin-top:6px;" />
       </div>
     </div>
     <div class="form-row">
@@ -290,6 +300,20 @@
     renderDeals();
   }
   window.toggleLike = toggleLike;
+
+  function handleStoreSelect() {
+    const select = document.getElementById('f-store-select');
+    const input = document.getElementById('f-store');
+    if (select.value === '기타') {
+      input.style.display = 'block';
+      input.value = '';
+      input.focus();
+    } else {
+      input.style.display = 'none';
+      input.value = select.value;
+    }
+  }
+  window.handleStoreSelect = handleStoreSelect;
   let currentCat = '전체';
   let searchQuery = '';
   let isAdmin = false;
