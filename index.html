@@ -6,6 +6,7 @@
   <title>KoDeal — 미국 한인을 위한 할인 정보</title>
   <meta name="description" content="미국 한인을 위한 패션·뷰티·식품 할인 정보를 매일 업데이트합니다." />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.6.0/kakao.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -111,6 +112,8 @@
     .sort-btn { padding: 5px 12px; font-size: 12px; border: 1px solid var(--border-strong); border-radius: 20px; background: none; cursor: pointer; color: var(--text-secondary); }
     .sort-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
     .card-date { font-size: 10px; color: var(--text-muted); margin-bottom: 4px; }
+    .kakao-btn { display: flex; align-items: center; gap: 4px; margin-top: 6px; width: 100%; padding: 7px; background: #FEE500; border: none; border-radius: var(--radius-sm); font-size: 12px; color: #3C1E1E; cursor: pointer; justify-content: center; font-weight: 500; }
+    .kakao-btn:hover { background: #F0D800; }
     .like-btn { display: flex; align-items: center; gap: 4px; margin-top: 6px; width: 100%; padding: 7px; background: none; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 12px; color: var(--text-secondary); cursor: pointer; justify-content: center; transition: all 0.15s; }
     .like-btn:hover { border-color: #ff6b6b; color: #ff6b6b; }
     .like-btn.liked { background: #fff0f0; border-color: #ff6b6b; color: #ff6b6b; }
@@ -133,7 +136,7 @@
       <input type="text" placeholder="딜 검색..." id="searchInput" />
     </div>
     <div class="header-right">
-      <span class="header-tag">미국 한인 할인 정보</span>
+      
       <button class="admin-btn" id="adminToggleBtn">관리자</button>
     </div>
   </div>
@@ -142,12 +145,12 @@
 <nav class="cat-nav">
   <div class="cat-nav-inner">
     <button class="cat-btn active" data-cat="전체">전체</button>
-    <button class="cat-btn" data-cat="뷰티">뷰티</button>
-    <button class="cat-btn" data-cat="패션">패션</button>
-    <button class="cat-btn" data-cat="식품">식품</button>
-    <button class="cat-btn" data-cat="홈·키친">홈·키친</button>
-    <button class="cat-btn" data-cat="전자제품">전자제품</button>
-    <button class="cat-btn" data-cat="기타">기타</button>
+    <button class="cat-btn" data-cat="뷰티">✨ 뷰티</button>
+    <button class="cat-btn" data-cat="패션">👗 패션</button>
+    <button class="cat-btn" data-cat="마트">🛒 마트</button>
+    <button class="cat-btn" data-cat="리빙">🏡 리빙</button>
+    <button class="cat-btn" data-cat="테크">💻 테크</button>
+    <button class="cat-btn" data-cat="특가">🎁 특가</button>
   </div>
 </nav>
 
@@ -182,8 +185,8 @@
         <label class="form-label">카테고리 *</label>
         <select class="form-select" id="f-cat">
           <option value="">선택</option>
-          <option>뷰티</option><option>패션</option><option>식품</option>
-          <option>홈·키친</option><option>전자제품</option><option>기타</option>
+          <option>뷰티</option><option>패션</option><option>마트</option>
+          <option>리빙</option><option>테크</option><option>특가</option>
         </select>
       </div>
       <div class="form-group">
@@ -237,15 +240,38 @@
   </div>
 </div>
 
-<footer>© 2025 KoDeal · 미국 한인을 위한 할인 정보</footer>
+<footer>© 2026 KoDeal · 미국 한인을 위한 할인 정보</footer>
 
 <script>
+  // 카카오 초기화
+  Kakao.init('62db2a1c5e2365eac66caeb3868c752b');
+
+  function shareKakao(title, price, link, img) {
+    Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: '[KoDeal] ' + title,
+        description: '💰 지금 $' + Number(price).toFixed(2) + ' · 미국 한인 할인 정보',
+        imageUrl: img || 'https://kodeal.vercel.app/og.png',
+        link: { mobileWebUrl: link, webUrl: link }
+      },
+      buttons: [{
+        title: '바로구매 →',
+        link: { mobileWebUrl: link, webUrl: link }
+      }, {
+        title: 'KoDeal 더보기',
+        link: { mobileWebUrl: 'https://kodeal.vercel.app', webUrl: 'https://kodeal.vercel.app' }
+      }]
+    });
+  }
+  window.shareKakao = shareKakao;
+
   const SUPABASE_URL = 'https://gokhzklkrosxyhmwnctp.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdva2h6a2xrcm9zeHlobXduY3RwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNzk0OTMsImV4cCI6MjA5Nzk1NTQ5M30.cFSXqSc4UDHTTsf3GRWTA110NT5HY99WEkLB4ueHU14';
   const { createClient } = supabase;
   const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  const EMOJI = { '뷰티':'✨','패션':'👗','식품':'🥗','홈·키친':'🏠','전자제품':'📱','기타':'🎁' };
+  const EMOJI = { '뷰티':'✨','패션':'👗','마트':'🛒','리빙':'🏡','테크':'💻','특가':'🎁' };
   let currentSort = 'latest';
   let likes = JSON.parse(localStorage.getItem('kodeal_likes') || '{}');
 
@@ -347,6 +373,9 @@
             <a class="buy-btn" href="${d.link}" target="_blank" rel="noopener">바로구매 →</a>
             <button class="like-btn ${likes[d.id] ? 'liked' : ''}" onclick="toggleLike(${d.id})">
               ${likes[d.id] ? '❤️' : '🤍'} 저도 샀어요 ${likes[d.id] ? '· 취소' : ''}
+            </button>
+            <button class="kakao-btn" onclick="shareKakao('${d.title}', ${d.price}, '${d.link}', '${d.img||''}')">
+              💬 카카오톡 공유
             </button>
             <button class="delete-btn" onclick="deleteDeal(${d.id})">🗑 삭제</button>
           </div>
