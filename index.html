@@ -275,17 +275,20 @@
     isAdmin = !!session;
     updateAdminUI();
   }
+  
 
   function updateAdminUI() {
     const addBtn = document.getElementById('openModalBtn');
     const adminBtn = document.getElementById('adminToggleBtn');
     const grid = document.getElementById('dealGrid');
-    if (isAdmin) {
+    const isAdminPage = window.location.pathname === '/admin' || window.location.search.includes('admin=true');
+    if (isAdmin && isAdminPage) {
       addBtn.style.display = 'flex';
       adminBtn.textContent = '로그아웃';
       grid.classList.add('admin-mode');
     } else {
       addBtn.style.display = 'none';
+      if (!isAdminPage) adminBtn.classList.remove('visible');
       adminBtn.textContent = '관리자';
       grid.classList.remove('admin-mode');
     }
@@ -441,15 +444,27 @@
     });
   });
 
-  // /admin URL일 때만 관리자 버튼 보이기
-  const isAdminPage = window.location.pathname === '/admin' || window.location.search.includes('admin=true');
-  if (isAdminPage) {
-    document.getElementById('adminToggleBtn').classList.add('visible');
+  // 초기화 (순서 중요: 관리자 확인 먼저, 그 다음 딜 로드)
+  async function init() {
+    const isAdminPage = window.location.pathname === '/admin' || window.location.search.includes('admin=true');
+    
+    // 관리자 세션 확인
+    const { data: { session } } = await sb.auth.getSession();
+    isAdmin = !!session;
+    
+    // 관리자 페이지 + 로그인된 경우만 버튼 보이기
+    if (isAdminPage) {
+      document.getElementById('adminToggleBtn').classList.add('visible');
+      if (!isAdmin) {
+        document.getElementById('loginModal').classList.add('open');
+      }
+    }
+    
+    updateAdminUI();
+    loadDeals();
   }
-
-  // 초기화
-  checkAdmin();
-  loadDeals();
+  
+  init();
 </script>
 </body>
 </html>
