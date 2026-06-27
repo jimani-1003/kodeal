@@ -481,6 +481,12 @@
     return match ? match[1].toUpperCase() : null;
   }
 
+  function setStoreAmazon() {
+    document.getElementById('f-store-select').value = 'Amazon';
+    document.getElementById('f-store').style.display = 'none';
+    document.getElementById('f-store').value = 'Amazon';
+  }
+
   function amazonAutoFill() {
     const link = document.getElementById('f-link').value.trim();
     const status = document.getElementById('amazonAutoFillStatus');
@@ -490,6 +496,7 @@
       status.style.color = '#cc0000';
       return;
     }
+    setStoreAmazon();
     const imgUrl = `https://m.media-amazon.com/images/P/${asin}.jpg`;
     _newDealImgUrl = imgUrl;
     const preview = document.getElementById('imgPreview');
@@ -498,7 +505,7 @@
     preview.style.display = 'block';
     preview.onerror = () => { status.textContent = '이미지를 불러오지 못했어요. 직접 업로드해주세요.'; status.style.color = '#cc0000'; };
     text.textContent = `Amazon 이미지 (ASIN: ${asin})`;
-    status.textContent = '이미지 자동입력 완료!';
+    status.textContent = '이미지·쇼핑몰 자동입력 완료!';
     status.style.color = '#2d9e4f';
   }
   window.amazonAutoFill = amazonAutoFill;
@@ -506,9 +513,7 @@
   function autoFillFromUrl(url) {
     const lower = url.toLowerCase();
     if (lower.includes('amazon.com') || lower.includes('amzn.to')) {
-      const sel = document.getElementById('f-store-select');
-      sel.value = 'Amazon';
-      document.getElementById('f-store').style.display = 'none';
+      setStoreAmazon();
     }
   }
 
@@ -856,7 +861,8 @@
     btn.textContent = '올리기';
     if (error) { alert('오류가 났어요. 다시 시도해주세요.'); return; }
     modal.classList.remove('open');
-    ['f-title','f-cat','f-store-select','f-price','f-original','f-link','f-img','f-publish-at'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = ''; });
+    ['f-title','f-cat','f-store-select','f-store','f-price','f-original','f-link','f-img','f-publish-at'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = ''; });
+    document.getElementById('f-store').style.display = 'none';
     document.getElementById('imgPreview').style.display = 'none';
     document.getElementById('imgDropText').textContent = '🖼️ 클릭하거나 이미지를 여기에 드래그';
     _newDealImgFile = null;
