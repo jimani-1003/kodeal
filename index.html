@@ -261,6 +261,8 @@
     <div class="form-group">
       <label class="form-label">구매 링크 *</label>
       <input class="form-input" id="f-link" placeholder="https://..." type="url" />
+      <button type="button" id="amazonAutoFillBtn" onclick="amazonAutoFill()" style="margin-top:6px; padding:6px 12px; font-size:12px; background:#f0f4ff; border:1px solid #c7d4f0; border-radius:6px; cursor:pointer; color:#3b5bdb; font-weight:500;">Amazon 이미지 자동입력</button>
+      <span id="amazonAutoFillStatus" style="margin-left:8px; font-size:12px; color:#888;"></span>
     </div>
     <div class="form-group">
       <label class="form-label">📅 예약 공개 (비워두면 지금 바로 공개)</label>
@@ -471,7 +473,35 @@
   });
 
   let _newDealImgFile = null;
+  let _newDealImgUrl = null;
   let _editDealImgFile = null;
+
+  function extractAsin(url) {
+    const match = url.match(/\/(?:dp|gp\/product|ASIN)\/([A-Z0-9]{10})/i);
+    return match ? match[1].toUpperCase() : null;
+  }
+
+  function amazonAutoFill() {
+    const link = document.getElementById('f-link').value.trim();
+    const status = document.getElementById('amazonAutoFillStatus');
+    const asin = extractAsin(link);
+    if (!asin) {
+      status.textContent = 'Amazon URL에서 ASIN을 찾을 수 없어요.';
+      status.style.color = '#cc0000';
+      return;
+    }
+    const imgUrl = `https://m.media-amazon.com/images/P/${asin}.jpg`;
+    _newDealImgUrl = imgUrl;
+    const preview = document.getElementById('imgPreview');
+    const text = document.getElementById('imgDropText');
+    preview.src = imgUrl;
+    preview.style.display = 'block';
+    preview.onerror = () => { status.textContent = '이미지를 불러오지 못했어요. 직접 업로드해주세요.'; status.style.color = '#cc0000'; };
+    text.textContent = `Amazon 이미지 (ASIN: ${asin})`;
+    status.textContent = '이미지 자동입력 완료!';
+    status.style.color = '#2d9e4f';
+  }
+  window.amazonAutoFill = amazonAutoFill;
 
   const SUPABASE_URL = 'https://gokhzklkrosxyhmwnctp.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdva2h6a2xrcm9zeHlobXduY3RwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNzk0OTMsImV4cCI6MjA5Nzk1NTQ5M30.cFSXqSc4UDHTTsf3GRWTA110NT5HY99WEkLB4ueHU14';
@@ -789,7 +819,7 @@
     const btn = document.getElementById('submitDeal');
     btn.disabled = true;
     btn.textContent = '올리는 중...';
-    if (imgFile) { img = await uploadImage(imgFile, 'deal'); }
+    if (imgFile) { img = await uploadImage(imgFile, 'deal'); } else if (_newDealImgUrl) { img = _newDealImgUrl; }
     const publishAt = document.getElementById('f-publish-at').value;
     const dealData = { title, cat, store, price, original, link, img };
     if (publishAt) dealData.publish_at = new Date(publishAt).toISOString();
@@ -802,6 +832,8 @@
     document.getElementById('imgPreview').style.display = 'none';
     document.getElementById('imgDropText').textContent = '🖼️ 클릭하거나 이미지를 여기에 드래그';
     _newDealImgFile = null;
+    _newDealImgUrl = null;
+    document.getElementById('amazonAutoFillStatus').textContent = '';
     loadDeals();
   });
 
