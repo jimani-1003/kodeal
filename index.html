@@ -503,6 +503,26 @@
   }
   window.amazonAutoFill = amazonAutoFill;
 
+  function autoFillFromUrl(url) {
+    const lower = url.toLowerCase();
+
+    // 쇼핑몰 자동 설정
+    if (lower.includes('amazon.com') || lower.includes('amzn.to')) {
+      const sel = document.getElementById('f-store-select');
+      sel.value = 'Amazon';
+      document.getElementById('f-store').style.display = 'none';
+    }
+
+    // 카테고리 자동 설정
+    const beautyKeywords = ['shampoo','conditioner','serum','pad','beauty','skincare','moisturizer','toner','sunscreen','mascara','lipstick'];
+    const techKeywords  = ['tablet','kindle','speaker','monitor','laptop','headphone','earphone','keyboard','mouse','tv','television','camera','printer'];
+    const catEl = document.getElementById('f-cat');
+    if (!catEl.value) {
+      if (beautyKeywords.some(k => lower.includes(k))) catEl.value = '뷰티';
+      else if (techKeywords.some(k => lower.includes(k))) catEl.value = '테크';
+    }
+  }
+
   const SUPABASE_URL = 'https://gokhzklkrosxyhmwnctp.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdva2h6a2xrcm9zeHlobXduY3RwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzNzk0OTMsImV4cCI6MjA5Nzk1NTQ5M30.cFSXqSc4UDHTTsf3GRWTA110NT5HY99WEkLB4ueHU14';
   const { createClient } = supabase;
@@ -799,6 +819,9 @@
   document.getElementById('closeLoginBtn').addEventListener('click', () => {
     document.getElementById('loginModal').classList.remove('open');
   });
+
+  // URL 자동입력
+  document.getElementById('f-link').addEventListener('input', e => autoFillFromUrl(e.target.value.trim()));
 
   // 딜 추가 모달
   const modal = document.getElementById('modal');
