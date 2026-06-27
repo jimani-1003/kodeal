@@ -505,21 +505,25 @@
 
   function autoFillFromUrl(url) {
     const lower = url.toLowerCase();
-
-    // 쇼핑몰 자동 설정
     if (lower.includes('amazon.com') || lower.includes('amzn.to')) {
       const sel = document.getElementById('f-store-select');
       sel.value = 'Amazon';
       document.getElementById('f-store').style.display = 'none';
     }
+  }
 
-    // 카테고리 자동 설정
-    const beautyKeywords = ['shampoo','conditioner','serum','pad','beauty','skincare','moisturizer','toner','sunscreen','mascara','lipstick'];
-    const techKeywords  = ['tablet','kindle','speaker','monitor','laptop','headphone','earphone','keyboard','mouse','tv','television','camera','printer'];
+  function detectCategoryFromTitle(title) {
+    const lower = title.toLowerCase();
+    const rules = [
+      { keywords: ['shampoo','conditioner','serum','pad','moisturizer','skincare','toner','sunscreen','mascara','lipstick'], cat: '뷰티' },
+      { keywords: ['tablet','kindle','speaker','laptop','tv','monitor','headphone','earphone','keyboard','mouse','camera'], cat: '테크' },
+      { keywords: ['vacuum','robot','sofa','furniture','bedding','mattress','pillow','curtain','rug'], cat: '리빙' },
+      { keywords: ['shirt','dress','pants','shoes','jacket','jeans','sneaker','coat','hoodie','blouse'], cat: '패션' },
+    ];
     const catEl = document.getElementById('f-cat');
-    if (!catEl.value) {
-      if (beautyKeywords.some(k => lower.includes(k))) catEl.value = '뷰티';
-      else if (techKeywords.some(k => lower.includes(k))) catEl.value = '테크';
+    if (catEl.value) return;
+    for (const { keywords, cat } of rules) {
+      if (keywords.some(k => lower.includes(k))) { catEl.value = cat; return; }
     }
   }
 
@@ -822,6 +826,7 @@
 
   // URL 자동입력
   document.getElementById('f-link').addEventListener('input', e => autoFillFromUrl(e.target.value.trim()));
+  document.getElementById('f-title').addEventListener('input', e => detectCategoryFromTitle(e.target.value.trim()));
 
   // 딜 추가 모달
   const modal = document.getElementById('modal');
