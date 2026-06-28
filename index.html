@@ -933,7 +933,8 @@
   // 관리자 모드일 때 전체선택 버튼 보이기
   function updateSelectAllBtn() {
     const btn = document.getElementById('selectAllBtn');
-    if (btn) btn.style.display = isAdmin ? 'block' : 'none';
+    const isAdminPage = window.location.pathname === '/admin' || window.location.search.includes('admin=true');
+    if (btn) btn.style.display = (isAdmin && isAdminPage) ? 'block' : 'none';
   }
 
   // 찜목록 패널
