@@ -204,7 +204,7 @@
   </button>
   <div class="toolbar">
     <div class="section-label" id="sectionLabel" style="margin-bottom:0;">🔥 최신 딜</div>
-    <button class="select-all-btn" id="selectAllBtn" onclick="toggleSelectAll()">전체 선택</button>
+    <button class="select-all-btn" id="selectAllBtn" onclick="toggleSelectAll()" style="display:none;">전체 선택</button>
     <div class="sort-wrap">
       <button class="sort-btn active" data-sort="latest">최신순</button>
       <button class="sort-btn" data-sort="discount">할인율순</button>
@@ -571,10 +571,7 @@
       return;
     }
 
-    const now = new Date();
     let filtered = allDeals.filter(d => {
-      // 일반 방문자는 예약딜 숨기기
-      if (!isAdmin && d.publish_at && new Date(d.publish_at) > now) return false;
       const matchCat = currentCat === '전체' || d.cat === currentCat;
       const matchQ = !searchQuery || d.title.includes(searchQuery) || d.store.includes(searchQuery);
       return matchCat && matchQ;
