@@ -131,117 +131,7 @@ footer { border-top: 1px solid var(--border); background: var(--surface); paddin
 @media (max-width: 900px) { .deal-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; } }
 @media (max-width: 600px) { .deal-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .header-tag { display: none; } .form-row { grid-template-columns: 1fr; } }
 
-/* ===== 이메일 임시저장 패널 ===== */
-#emailPanel {
-  display: none;
-  position: fixed;
-  right: 0;
-  top: 56px;
-  width: 420px;
-  height: calc(100vh - 56px);
-  background: var(--surface);
-  border-left: 1px solid var(--border);
-  z-index: 90;
-  overflow-y: auto;
-  box-shadow: -4px 0 20px rgba(0,0,0,0.08);
-  transition: right 0.25s ease;
-}
-#emailPanel .ep-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  background: var(--surface);
-  z-index: 1;
-}
-#emailPanel .ep-body { padding: 16px; }
-.ep-fetch-btn {
-  width: 100%;
-  padding: 10px;
-  background: #3b5bdb;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-}
-.ep-fetch-btn:hover { background: #2f4ac5; }
-.ep-fetch-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.ep-log { margin-top: 8px; font-size: 12px; color: var(--text-muted); min-height: 20px; }
-.ep-card {
-  background: #f8f7f5;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px;
-  margin-top: 10px;
-}
-.ep-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
-.ep-card-title { font-size: 13px; font-weight: 500; line-height: 1.4; flex: 1; }
-.ep-badge { font-size: 10px; padding: 2px 8px; border-radius: 99px; border: 1px solid #fde68a; background: #fff7e0; color: #b45309; white-space: nowrap; flex-shrink: 0; }
-.ep-from { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; }
-.ep-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-.ep-field { display: flex; flex-direction: column; gap: 3px; }
-.ep-field.full { grid-column: 1 / -1; }
-.ep-field label { font-size: 10px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
-.ep-field input, .ep-field select {
-  padding: 5px 8px;
-  border: 1px solid var(--border-strong);
-  border-radius: 6px;
-  font-size: 12px;
-  background: white;
-  color: var(--text-primary);
-  font-family: inherit;
-  outline: none;
-}
-.ep-field input:focus, .ep-field select:focus { border-color: var(--accent); }
-.ep-actions { display: flex; gap: 6px; }
-.ep-skip-btn { flex: 1; padding: 6px; background: none; border: 1px solid var(--border-strong); border-radius: 6px; font-size: 12px; cursor: pointer; color: var(--text-muted); }
-.ep-save-btn { flex: 2; padding: 6px; background: var(--accent); color: white; border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; }
-.ep-save-btn:hover { background: var(--accent-dark); }
-.ep-save-all-btn {
-  margin-top: 12px;
-  width: 100%;
-  padding: 10px;
-  background: #1a1a1a;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-}
-.ep-save-all-btn:hover { background: #333; }
-.ep-paste-area {
-  width: 100%;
-  height: 90px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  padding: 10px;
-  font-size: 12px;
-  font-family: monospace;
-  resize: vertical;
-  margin-top: 8px;
-  outline: none;
-}
-.ep-paste-area:focus { border-color: var(--accent); }
-.ep-parse-btn {
-  margin-top: 8px;
-  width: 100%;
-  padding: 8px;
-  background: #1a1a1a;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  cursor: pointer;
-}
-@media (max-width: 600px) {
-  #emailPanel { width: 100%; }
-}
+
 </style>
 </head>
 <body>
@@ -256,8 +146,6 @@ footer { border-top: 1px solid var(--border); background: var(--surface); paddin
     <div class="header-right">
       <button class="wishlist-btn" id="wishlistBtn" onclick="toggleWishlist()">🩷 찜목록</button>
       <button class="admin-btn" id="adminToggleBtn">관리자</button>
-      <!-- ★ 추가: 이메일 불러오기 버튼 -->
-      <button class="admin-btn" id="emailImportBtn" style="display:none; background:#f0f4ff; border-color:#c7d4f0; color:#3b5bdb;" onclick="toggleEmailPanel()">📧 오늘 이메일</button>
     </div>
   </div>
 </header>
@@ -292,27 +180,6 @@ footer { border-top: 1px solid var(--border); background: var(--surface); paddin
     <div class="loading">딜 불러오는 중...</div>
   </div>
 </main>
-
-<!-- ★ 추가: 이메일 임시저장 사이드 패널 -->
-<div id="emailPanel">
-  <div class="ep-header">
-    <div>
-      <div style="font-size:15px; font-weight:600;">📧 이메일 → 임시저장</div>
-      <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">오늘 들어온 딜 이메일을 임시저장으로 올립니다</div>
-    </div>
-    <button onclick="toggleEmailPanel()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-muted);">✕</button>
-  </div>
-  <div class="ep-body">
-    <button class="ep-fetch-btn" id="epFetchBtn" onclick="epShowPasteInput()">🔄 오늘 이메일 불러오기</button>
-    <div class="ep-log" id="epLog">Claude에서 이메일 JSON을 받아 붙여넣으세요.</div>
-    <div id="epPasteSection" style="display:none;">
-      <textarea class="ep-paste-area" id="epPasteArea" placeholder='Claude가 보낸 JSON 배열을 여기에 붙여넣으세요...'></textarea>
-      <button class="ep-parse-btn" onclick="epParseJson()">파싱하기</button>
-    </div>
-    <div id="epCards"></div>
-  </div>
-</div>
-
 <!-- 딜 추가 모달 -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
@@ -626,20 +493,17 @@ async function checkAdmin() {
 function updateAdminUI() {
   const addBtn = document.getElementById('openModalBtn');
   const adminBtn = document.getElementById('adminToggleBtn');
-  const emailBtn = document.getElementById('emailImportBtn');
   const grid = document.getElementById('dealGrid');
   const isAdminPage = window.location.search.includes('admin=true');
   updateSelectAllBtn();
   if (isAdmin && isAdminPage) {
     addBtn.style.display = 'flex';
     adminBtn.textContent = '로그아웃';
-    emailBtn.style.display = 'block'; // ★ 이메일 버튼 표시
     grid.classList.add('admin-mode');
   } else {
     addBtn.style.display = 'none';
     if (!isAdminPage) adminBtn.classList.remove('visible');
     adminBtn.textContent = '관리자';
-    emailBtn.style.display = 'none'; // ★ 이메일 버튼 숨김
     grid.classList.remove('admin-mode');
   }
 }
@@ -872,118 +736,6 @@ function renderWishlistPanel() {
 function removeWishlist(id) { likes[id] = false; saveLikes(); renderDeals(); renderWishlistPanel(); }
 window.removeWishlist = removeWishlist;
 
-// ===== ★ 이메일 임시저장 기능 =====
-let epEmails = [];
-
-function toggleEmailPanel() {
-  const panel = document.getElementById('emailPanel');
-  const btn = document.getElementById('emailImportBtn');
-  const isOpen = panel.style.display !== 'none';
-  panel.style.display = isOpen ? 'none' : 'block';
-  btn.style.background = isOpen ? '#f0f4ff' : '#3b5bdb';
-  btn.style.color = isOpen ? '#3b5bdb' : 'white';
-  btn.style.borderColor = isOpen ? '#c7d4f0' : '#3b5bdb';
-}
-window.toggleEmailPanel = toggleEmailPanel;
-
-function epLog(msg, color) {
-  document.getElementById('epLog').innerHTML = `<span style="color:${color||'var(--text-muted)'}">● ${msg}</span>`;
-}
-
-function epShowPasteInput() {
-  epLog('Claude에서 받은 JSON을 아래에 붙여넣으세요.', '#f0a500');
-  document.getElementById('epPasteSection').style.display = 'block';
-  document.getElementById('epPasteArea').focus();
-}
-window.epShowPasteInput = epShowPasteInput;
-
-function epParseJson() {
-  const raw = document.getElementById('epPasteArea').value.trim();
-  if (!raw) return;
-  try {
-    epEmails = JSON.parse(raw);
-    document.getElementById('epPasteSection').style.display = 'none';
-    epLog(`${epEmails.length}개 파싱 완료!`, '#2d9e4f');
-    epRenderCards();
-  } catch { epLog('JSON 형식이 맞지 않아요. 다시 확인해주세요.', '#cc0000'); }
-}
-window.epParseJson = epParseJson;
-
-function epEsc(s) { return String(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-
-function epRenderCards() {
-  const container = document.getElementById('epCards');
-  if (!epEmails.length) { container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">이메일이 없어요.</div>'; return; }
-  container.innerHTML = epEmails.map((em, i) => `
-    <div class="ep-card" id="epc-${i}">
-      <div class="ep-card-header">
-        <div class="ep-card-title">${epEsc(em.subject||em.title||'(제목 없음)')}</div>
-        <span class="ep-badge" id="epb-${i}">대기</span>
-      </div>
-      <div class="ep-from">${epEsc(em.from||'')}</div>
-      <div class="ep-fields">
-        <div class="ep-field full"><label>제품명</label><input id="ept-${i}" value="${epEsc(em.title||em.subject||'')}"/></div>
-        <div class="ep-field"><label>카테고리</label>
-          <select id="epc2-${i}">${['뷰티','패션','마트','리빙','테크','특가'].map(c=>`<option${em.cat===c?' selected':''}>${c}</option>`).join('')}</select></div>
-        <div class="ep-field"><label>쇼핑몰</label>
-          <select id="eps-${i}">${['Amazon','Sephora','Nordstrom','Walmart','Target','Costco','기타'].map(s=>`<option${em.store===s?' selected':''}>${s}</option>`).join('')}</select></div>
-        <div class="ep-field"><label>할인가 (USD)</label><input id="epp-${i}" type="number" value="${em.price||''}" placeholder="0.00"/></div>
-        <div class="ep-field"><label>원가 (USD)</label><input id="epo-${i}" type="number" value="${em.original||''}" placeholder="0.00"/></div>
-        <div class="ep-field full"><label>구매 링크</label><input id="epl-${i}" value="${epEsc(em.link||'')}"/></div>
-        <div class="ep-field full"><label>이미지 URL</label><input id="epi-${i}" value="${epEsc(em.img||'')}"/></div>
-      </div>
-      <div class="ep-actions">
-        <button class="ep-skip-btn" onclick="epSkip(${i})">건너뛰기</button>
-        <button class="ep-save-btn" onclick="epSave(${i})">임시저장으로 올리기</button>
-      </div>
-    </div>`).join('') +
-    `<button class="ep-save-all-btn" onclick="epSaveAll()">전체 임시저장</button>`;
-}
-
-function epSkip(i) {
-  const badge = document.getElementById(`epb-${i}`);
-  badge.textContent = '건너뜀'; badge.style.background = '#f1f0ee'; badge.style.color = '#9b9b9b'; badge.style.borderColor = '#ddd';
-  document.getElementById(`epc-${i}`).style.opacity = '0.45';
-}
-window.epSkip = epSkip;
-
-async function epSave(i) {
-  const title = document.getElementById(`ept-${i}`)?.value?.trim();
-  const cat = document.getElementById(`epc2-${i}`)?.value;
-  const store = document.getElementById(`eps-${i}`)?.value;
-  const price = parseFloat(document.getElementById(`epp-${i}`)?.value) || null;
-  const original = parseFloat(document.getElementById(`epo-${i}`)?.value) || null;
-  const link = document.getElementById(`epl-${i}`)?.value?.trim();
-  const img = document.getElementById(`epi-${i}`)?.value?.trim() || null;
-  const badge = document.getElementById(`epb-${i}`);
-
-  if (!title || !price || !link) {
-    badge.textContent = '필수값 없음'; badge.style.background = '#fee2e2'; badge.style.color = '#991b1b'; badge.style.borderColor = '#fca5a5';
-    return;
-  }
-  badge.textContent = '저장 중...';
-  const { error } = await sb.from('deals').insert([{ title, cat, store, price, original: original||null, link, img, publish_at: '2099-12-31T00:00:00+00:00' }]);
-  if (error) {
-    badge.textContent = '실패'; badge.style.background = '#fee2e2'; badge.style.color = '#991b1b'; badge.style.borderColor = '#fca5a5';
-    epLog(`저장 실패: ${error.message}`, '#cc0000');
-  } else {
-    badge.textContent = '완료 ✓'; badge.style.background = '#dcfce7'; badge.style.color = '#166534'; badge.style.borderColor = '#86efac';
-    epLog(`"${title}" 임시저장 완료`, '#2d9e4f');
-    loadDeals();
-  }
-}
-window.epSave = epSave;
-
-async function epSaveAll() {
-  for (let i = 0; i < epEmails.length; i++) {
-    const badge = document.getElementById(`epb-${i}`);
-    if (badge && badge.textContent !== '건너뜀' && badge.textContent !== '완료 ✓') {
-      await epSave(i); await new Promise(r => setTimeout(r, 200));
-    }
-  }
-}
-window.epSaveAll = epSaveAll;
-// ===== 이메일 임시저장 기능 끝 =====
 
 async function init() {
   const isAdminPage = window.location.search.includes('admin=true');
